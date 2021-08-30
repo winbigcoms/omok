@@ -1,9 +1,9 @@
 import ReactDOM from "react-dom";
 import WinModal from "./winModal";
 
-const Modal = ({ winner }) => {
+const Modal = ({ winner, resetGame }) => {
   return ReactDOM.createPortal(
-    <WinModal name={winner} />,
+    <WinModal name={winner} resetGame={resetGame} />,
     document.getElementById("win")
   );
 };

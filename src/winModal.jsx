@@ -25,7 +25,7 @@ const ModalBox = styled.div`
   }
 `;
 
-const WinModal = ({ name }) => {
+const WinModal = ({ name, resetGame }) => {
   return (
     <ModalConatiner className="pyro">
       <div className="before"></div>
@@ -36,6 +36,7 @@ const WinModal = ({ name }) => {
           <br />
           승리!
         </p>
+        <button onClick={resetGame}>다시하기</button>
       </ModalBox>
     </ModalConatiner>
   );

@@ -1,5 +1,5 @@
 import "./App.css";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import Modal from "./Modal";
 
@@ -73,7 +73,7 @@ const checkStright = (arr, type) => {
   return result;
 };
 
-const checkDiagonalFun = (type, arr, idx = 0, count = 0) => {
+const isDiagonalStright = (type, arr, idx = 0, count = 0) => {
   const next = arr.find((ele) => {
     return type === "down"
       ? ele[0] === arr[idx][0] + 1 && ele[1] === arr[idx][1] + 1
@@ -84,7 +84,7 @@ const checkDiagonalFun = (type, arr, idx = 0, count = 0) => {
 
   if (nextIdx !== -1) {
     count = count + 1;
-    return checkDiagonalFun(type, arr, arr.indexOf(next), count);
+    return isDiagonalStright(type, arr, arr.indexOf(next), count);
   } else {
     if (count === 4) {
       return true;
@@ -94,30 +94,30 @@ const checkDiagonalFun = (type, arr, idx = 0, count = 0) => {
 };
 
 const checkDiagonal = (arr) => {
+  let result = false;
+
   const downDiag = [...arr];
   const upDiag = [...arr];
 
   downDiag.sort((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0));
   upDiag.sort((a, b) => (a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0));
-  // 왼쪽에서 오른쪽으로 내려간다. +1, +1
-  let isDIag = false;
 
   for (let i = 0; i < arr.length - 4; i++) {
-    const checkLeftDown = checkDiagonalFun("down", downDiag, i);
-    const checkRightUp = checkDiagonalFun("up", upDiag, i);
+    const checkLeftDown = isDiagonalStright("down", downDiag, i);
+    const checkRightUp = isDiagonalStright("up", upDiag, i);
     if (checkLeftDown || checkRightUp) {
-      isDIag = true;
+      result = true;
       break;
     }
   }
-  // 왼쪽에서 오른쪽으로 올라간다. -1, +1
-  return isDIag;
+  return result;
 };
 
 const checkOmok = (arr) => {
   // 스트레이트 확인
   let isColStrigh = checkStright(arr, "col");
   let isRowStrigh = checkStright(arr, "row");
+  // 대각선 확인
   let isDiagonal = checkDiagonal(arr);
   if (isRowStrigh || isColStrigh || isDiagonal) return true;
   return false;
@@ -153,6 +153,12 @@ function App() {
     setTurn((state) => !state);
   };
 
+  const resetGame = useCallback(() => {
+    setResult(() => "");
+    setUserA(() => []);
+    setUserB(() => []);
+  }, []);
+
   useEffect(() => {
     let res;
     if (!turn) {
@@ -169,43 +175,61 @@ function App() {
   return (
     <FlexBox
       style={{
-        width: `${16 * 40}px`,
-        flexWrap: "wrap",
+        marginTop: "50px",
+        justifyContent: "space-around",
+        alignItems: "center",
       }}
-      className="App"
     >
-      {line.map((_, col) => (
+      <FlexBox
+        style={{
+          width: `${16 * 40}px`,
+          flexWrap: "wrap",
+        }}
+        className="App"
+      >
+        {line.map((_, col) => (
+          <div
+            key={col}
+            style={{
+              width: `${16 * 40}px`,
+              display: "flex",
+            }}
+          >
+            {line.map((_, row) => (
+              <OmokCell
+                key={row}
+                data-cell={col + "," + row}
+                data-owner={
+                  userA.includes(col + "," + row)
+                    ? "A"
+                    : userB.includes(col + "," + row)
+                    ? "B"
+                    : "N"
+                }
+                owner={
+                  userA.includes(col + "," + row)
+                    ? "A"
+                    : userB.includes(col + "," + row)
+                    ? "B"
+                    : "N"
+                }
+                onClick={onClickHandler}
+              ></OmokCell>
+            ))}
+          </div>
+        ))}
+      </FlexBox>
+      {result ? (
+        <Modal winner={result} resetGame={resetGame} />
+      ) : (
         <div
-          key={col}
           style={{
-            width: `${16 * 40}px`,
-            display: "flex",
+            width: "200px",
           }}
         >
-          {line.map((_, row) => (
-            <OmokCell
-              key={row}
-              data-cell={col + "," + row}
-              data-owner={
-                userA.includes(col + "," + row)
-                  ? "A"
-                  : userB.includes(col + "," + row)
-                  ? "B"
-                  : "N"
-              }
-              owner={
-                userA.includes(col + "," + row)
-                  ? "A"
-                  : userB.includes(col + "," + row)
-                  ? "B"
-                  : "N"
-              }
-              onClick={onClickHandler}
-            ></OmokCell>
-          ))}
+          턴 {turn ? "빨" : "파"}
         </div>
-      ))}
-      {result ? <Modal winner={result} /> : <div>턴 {turn ? "빨" : "파"}</div>}
+      )}
     </FlexBox>
   );
 }
