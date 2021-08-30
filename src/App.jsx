@@ -1,6 +1,7 @@
 import "./App.css";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+import Modal from "./Modal";
 
 const FlexBox = styled.div`
   display: flex;
@@ -72,16 +73,18 @@ const checkStright = (arr, type) => {
   return result;
 };
 
-const checkDigaonal = (type, arr, idx = 0, count = 0) => {
+const checkDiagonalFun = (type, arr, idx = 0, count = 0) => {
   const next = arr.find((ele) => {
     return type === "down"
       ? ele[0] === arr[idx][0] + 1 && ele[1] === arr[idx][1] + 1
       : ele[0] === arr[idx][0] - 1 && ele[1] === arr[idx][1] + 1;
   });
+
   const nextIdx = arr.indexOf(next);
+
   if (nextIdx !== -1) {
     count = count + 1;
-    return checkDigaonal(type, arr, arr.indexOf(next), count);
+    return checkDiagonalFun(type, arr, arr.indexOf(next), count);
   } else {
     if (count === 4) {
       return true;
@@ -96,13 +99,12 @@ const checkDiagonal = (arr) => {
 
   downDiag.sort((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0));
   upDiag.sort((a, b) => (a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0));
-  console.log(downDiag, upDiag);
   // 왼쪽에서 오른쪽으로 내려간다. +1, +1
   let isDIag = false;
 
   for (let i = 0; i < arr.length - 4; i++) {
-    const checkLeftDown = checkDigaonal("down", downDiag);
-    const checkRightUp = checkDigaonal("up", upDiag);
+    const checkLeftDown = checkDiagonalFun("down", downDiag, i);
+    const checkRightUp = checkDiagonalFun("up", upDiag, i);
     if (checkLeftDown || checkRightUp) {
       isDIag = true;
       break;
@@ -125,7 +127,6 @@ const checkEnd = (arr, name) => {
   if (arr.length < 5) return false;
 
   const point = arr.map((data) => data.split(",").map((data) => +data));
-  console.log(name);
   if (checkOmok(point)) return name;
 
   return "";
@@ -149,11 +150,12 @@ function App() {
     } else {
       setUserB((state) => [...state, e.target.dataset.cell]);
     }
+    setTurn((state) => !state);
   };
 
   useEffect(() => {
     let res;
-    if (turn) {
+    if (!turn) {
       res = checkEnd(userA, "red");
     } else {
       res = checkEnd(userB, "blue");
@@ -161,10 +163,8 @@ function App() {
 
     if (res) {
       setResult(() => res);
-    } else {
-      setTurn((state) => !state);
     }
-  }, [userA, userB]);
+  }, [turn, userA, userB]);
 
   return (
     <FlexBox
@@ -205,7 +205,7 @@ function App() {
           ))}
         </div>
       ))}
-      {result ? <div>{result}</div> : <div>턴 {turn ? "빨" : "파"}</div>}
+      {result ? <Modal winner={result} /> : <div>턴 {turn ? "빨" : "파"}</div>}
     </FlexBox>
   );
 }
