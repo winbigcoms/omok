@@ -31,10 +31,14 @@ const OmokCell = styled.div`
     border-radius: 10px;
   }
 `;
+
 const checkStright = (arr, type) => {
   const sortMethod = type === "col" ? 1 : 0;
   let arrSetObject = {};
-
+  //  타입에 따라서 가로 혹은 세로 기준으로 정렬
+  //  {
+  //    5:[1,2,4] 세로 5번에 가로 1,2,4가 있음 이런 식으로 정렬
+  //  }
   arr.forEach((numArr) => {
     if (arrSetObject[numArr[sortMethod]]) {
       arrSetObject[numArr[sortMethod]].push(numArr[Math.abs(sortMethod - 1)]);
@@ -46,17 +50,22 @@ const checkStright = (arr, type) => {
   let result = false;
 
   for (let line in arrSetObject) {
+    // 해당 줄의 아이템이 5개이하면 무시, 같은 줄에 5개 이상히면 스트레이트 일 수 있음
     if (arrSetObject[line].length < 5) {
       continue;
     }
+    // 아이템을 복사 해서 오름차순으로 정렬
     const lineData = [...arrSetObject[line]];
     lineData.sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
-
+    // 오름차순으로 정렬된 아이템을 순회, 다음 값이 이전 값의
     let isRight = 0;
     for (let i = 0; i < lineData.length - 1; i++) {
+      // 이전값 +1이 다음 값이라면 isRight +1
       if (lineData[i] + 1 === lineData[i + 1]) {
         isRight++;
       } else {
+        // 아니면 isRight 리셋
+        // 단 2345 7 인 경우 앞에서 스트레이트가 만들어질 경우에 대한 처리로 끊긴 시점의 isRight 체크
         if (isRight === 4) {
           result = true;
           break;
@@ -64,6 +73,7 @@ const checkStright = (arr, type) => {
         isRight = 0;
       }
     }
+    // 다 돌았을 때 스트레이트면 브레이크
     if (isRight === 4) {
       result = true;
       break;
@@ -72,8 +82,9 @@ const checkStright = (arr, type) => {
 
   return result;
 };
-
+// 대각선 확인 함수
 const isDiagonalStright = (type, arr, idx = 0, count = 0) => {
+  // 대각선에 있는 좌표를 검색
   const next = arr.find((ele) => {
     return type === "down"
       ? ele[0] === arr[idx][0] + 1 && ele[1] === arr[idx][1] + 1
@@ -81,7 +92,7 @@ const isDiagonalStright = (type, arr, idx = 0, count = 0) => {
   });
 
   const nextIdx = arr.indexOf(next);
-
+  // 있으면 해당 좌표의 인덱스값으로 재귀 없으면 그냥 리턴, 단 재귀한 수가 4번이면 스트레이트
   if (nextIdx !== -1) {
     count = count + 1;
     return isDiagonalStright(type, arr, arr.indexOf(next), count);
@@ -93,15 +104,18 @@ const isDiagonalStright = (type, arr, idx = 0, count = 0) => {
   }
 };
 
+// 대각선 확인 리턴 함수
 const checkDiagonal = (arr) => {
   let result = false;
-
+  // 대상 배열 복사 후 용도에 맞게 정렬,
+  // 대각선은 왼위 에서 오른아래 혹은 왼 아래 에서 오른 위 두가지니까 2개로
   const downDiag = [...arr];
   const upDiag = [...arr];
 
   downDiag.sort((a, b) => (a[0] > b[0] ? 1 : a[0] < b[0] ? -1 : 0));
   upDiag.sort((a, b) => (a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0));
 
+  // 뒤에서 5번째 까지만 체크, 4번째부터는 어차피 안됨
   for (let i = 0; i < arr.length - 4; i++) {
     const checkLeftDown = isDiagonalStright("down", downDiag, i);
     const checkRightUp = isDiagonalStright("up", upDiag, i);
@@ -141,7 +155,6 @@ function App() {
   for (let i = 0; i < 16; i++) {
     line.push(i);
   }
-
   const onClickHandler = (e) => {
     if (e.target.dataset.owner !== "N") return;
     if (result) return;
@@ -219,9 +232,7 @@ function App() {
           </div>
         ))}
       </FlexBox>
-      {result ? (
-        <Modal winner={result} resetGame={resetGame} />
-      ) : (
+      {
         <div
           style={{
             width: "200px",
@@ -229,7 +240,8 @@ function App() {
         >
           턴 {turn ? "빨" : "파"}
         </div>
-      )}
+      }
+      {result !== "" && <Modal winner={result} resetGame={resetGame} />}
     </FlexBox>
   );
 }
